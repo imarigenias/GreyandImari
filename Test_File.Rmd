@@ -29,5 +29,10 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-
 Add a line of text 
+I don't understand what I am doing but here goes.
+
+```{r}
+  z <- 45*3
+```
+
