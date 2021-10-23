@@ -10,12 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 source("data_cleaning_functions.R")
 ```
 
-```{r example-functions,}
-fooXYZ(3)
-```
-
-
-
 # Background info on R
 This is a [link](https://www.middleprofessor.com/files/applied-biostatistics_bookdown/_book/getting-started-r-projects-and-r-markdown.html#create-a-fake-data-chunk) to an rmarkdown created by a professor on important elements of R. It will be useful to read: 
 
@@ -36,7 +30,7 @@ Here's a link to [cheat sheets](https://www.rstudio.com/resources/cheatsheets/) 
 [Instructions](https://github.com/jlucasmckay/motionTools/blob/main/doc/02_redcap.md) from Lucas on github.
 
 ## Create environ file
-On R Studio: File > New File > New Text File. Save the file as ".Renviron." Make sure is is saved in the project directory. 
+On R Studio: File > New File > New Text File. Save the file as ".Renviron." Make sure it is saved in the project directory. 
 
 
 ## Install "motionTools" package
@@ -102,7 +96,7 @@ I'll create a sample data set just to practice some things we might do, such as 
   print("Select specific column --> df_name$col_name")
   patients$ID
   
-  print('Select specific column --> df[num_row, ]')
+  print('Select specific row --> df[num_row, ]')
   patients[1, ]
   
 ```
@@ -157,30 +151,40 @@ Creating new data frames from those values
   ids_patients
   
 ```
-
+## User created functions
 ```{r sample_function}
   ids_needed <- findMissing(patients, ID, Age)
-  
+  ids_needed
 ```
 
+Extract this table as an excel file. 
+```{r excel-output, eval=FALSE}
+  write.xlsx(ids_needed, "missing_Age_IDS.xlsx",
+           sheetName="ageNA", row.names = FALSE,
+           col.names = TRUE, append=FALSE)
+```
+Let's say we updated the table (most likely in excel). Import the excel sheet back into R and want to update the missing values with the info we found.
 
-
-## Replace missing values
-Record ID 
+Create updated file. 
 ```{r}
-  # record IDs 3 and 5 have missing Ages
-  # We want ID #3 to have an age of 50
-  patients[patients$ID =="03", "Age"] <- 50 
-  patients[3,]
-
-  # Also, want patient 5 to be 70
-  patients$Age[5] <- 70
-  patients[5,]
-  
-
+  # sample new data set with added info 
+replaced_ages <- ids_needed
+replaced_ages$Age <- c(20, 30)
+replaced_ages
 ```
 
-## Change change values
+Now we want to replace the missing values. In this case, I am inputting the original data frame and the updated one, and saving it to a new data frame. 
+```{r}
+  updated_patients <- populateMissing(patients, replaced_ages, ID, Age)
+  print("New data set")
+  updated_patients # new data set
+  
+  print("Old data set")
+  patients # old data set
+```
+
+
+## Change values
 
 ## Add variable 
 ```{r}
@@ -197,8 +201,8 @@ Record ID
 * [White paper on GitHub and RStudio](https://resources.github.com/whitepapers/github-and-rstudio/)
 * ["Who are you?" Error](https://stackoverflow.com/questions/11656761/git-please-tell-me-who-you-are-error)
 
-## Create environ file
-[back to instructions](#instructions)
+
+
 ## R Markdown
 In line `code` 
 
@@ -220,10 +224,4 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-Add a line of text 
-I don't understand what I am doing but here goes.
-
-```{r}
-  z <- 45*3
-```
 
