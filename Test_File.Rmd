@@ -7,9 +7,200 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+source("data_cleaning_functions.R")
 ```
 
+```{r example-functions,}
+fooXYZ(3)
+```
+
+
+
+# Background info on R
+This is a [link](https://www.middleprofessor.com/files/applied-biostatistics_bookdown/_book/getting-started-r-projects-and-r-markdown.html#create-a-fake-data-chunk) to an rmarkdown created by a professor on important elements of R. It will be useful to read: 
+
+* 2.1: R vs R Studio
+* 2.5: R Markdown in a nutshell (you don't need to download R markdown) 
+* 2.7: importing packages
+* 2.8 Create an R Studio Project (don't actually create one, just check out how it works)
+* 2.9: Working on a project, in a nutshell 
+* 2.11.1  Create a “fake-data” chunk
+* 2.11.3 Knit the Rmd
+
+
+### Info on tidyverse package {#tidyverse}
+Here's a link to [cheat sheets](https://www.rstudio.com/resources/cheatsheets/) for the "tidyverse" package that will be useful for this analysis. Pay special attention to "dplyr" and "tidyr."
+
+# Get redcap data into R 
+## Lucas Instructions {#instructions}
+[Instructions](https://github.com/jlucasmckay/motionTools/blob/main/doc/02_redcap.md) from Lucas on github.
+
+## Create environ file
+On R Studio: File > New File > New Text File. Save the file as ".Renviron." Make sure is is saved in the project directory. 
+
+
+## Install "motionTools" package
+```{r install-packages, eval=FALSE}
+  install.packages("devtools")
+  devtools::install_github("jlucasmckay/motionTools")
+```
+You have to install the "devtools" package to obtain a function that will allow
+you to download the R package (motionTools) Lucas has created for data analysis.
+
+Make sure you have [R version 4.1.1](https://cran.r-project.org/bin/macosx/). 
+Then, go to Tools > Global Options... > Code >
+check "Use native pipe operator." 
+
+## Reading a report into R
+The example on github uses information specific to a certain sample report, so it might not work for us. I'm going to use the report "Patients with Missing LEDD."
+
+### Loading packages
+```{r load-libraries, }
+  library(motionTools)
+  library(tidyverse)
+```
+You download R packages once, but you have to load them every time you want to use them, using `library(package-name)`. Alternatively, you can use  `package-name::function-name()` to specify the function and library you are using in your code. 
+
+### Creating an R dataset from redcap data
+```{r create-redcap-data,}
+redcap_data = ReadRedcapReport(token = Sys.getenv("clinic_redcap_token"), url = "https://redcap.emory.edu/api/", report_id = 32116)
+
+redcap_data
+
+```
+`redcap_data=ReadRedcapReport`creates a data frame called `redcap_data` using the `ReadReadcapReport` function from the `motionTools` package. I created it without manipulating the data set first, so I can show you what information it displays and how. 
+
+### Manipulate data output 
+```{r}
+  rd_data1 = redcap_data |>  
+    arrange(ledd) |> 
+    select(record_id, ledd)
+  
+  rd_data1
+```
+The next lines I have added after creating the data set specify how to arrange the data and which columns I want in the output. These functions come from the `dplyr` package mentioned [earlier](#tidyverse), which is used in data manipulation. 
+Also read up  on [piping](https://r4ds.had.co.nz/pipes.html). (The pipe operator looks like " |> " and not "%>%" now).
+
+# Edit data in R
+There are many things we can do from here. I didn't edit any of the data sets, because I am not sure how that will affect things on Redcap. Lucas will show us what he wants us to do and how. 
+
+I'll create a sample data set just to practice some things we might do, such as replacing missing data or changing values.
+```{r}
+    patients <- data.frame("ID" = c("01", "02", "03", "04", "05", "06", "07",
+                                    "08","09", "10"),
+                           "Age" = c(50, 18, NA, 45, NA, 20, 45, 60, 89, 90),
+                           "Dosage" = c(100, 120, 130, NA, 3000, 450, 800, 300,
+                                        NA, 500),
+                           "Dosage_Manual" = c(100, 250, 130, 150, 300, 450, 800, 
+                                               300,20,50)
+                           )
+    patients
+```
+
+## Select columns and rows
+```{r}
+  print("Select specific column --> df_name$col_name")
+  patients$ID
+  
+  print('Select specific column --> df[num_row, ]')
+  patients[1, ]
+  
+```
+
+## Explore data 
+### Counts
+```{r}
+  print("Num of patients with dosage above 100 (TRUE)")
+  table(patients$Dosage > 100)
+  
+  print("Number of missing values (TRUE)")
+  table(is.na(patients$Age))
+  
+```
+
+## Descriptive Statistics
+```{r}
+  print("Summary of each variable")
+  summary(patients)
+  
+  print("Summary of certain variables")
+  summary(patients$Age)
+```
+
+
+Creating new data frames from those values 
+```{r}
+  print("Create summary")
+  missingstats <- patients |> 
+    summarise(numNA = sum(is.na(Dosage)),
+              max_dose = max(Dosage, na.rm = TRUE))
+  
+ missingstats
+  
+```
+
+### Select observations based on criteria 
+```{r}
+  print("Display IDs and ages of subjects with missing Ages")
+  ids_ageNA<- patients |>
+    filter(is.na(Age))|>  
+    select(ID, Age)
+
+  ids_ageNA
+  
+  print("Create list of IDs")
+  ids_patients <- patients |>
+      filter(is.na(Age))|>
+      select(ID) |> 
+      unlist()
+  
+  ids_patients
+  
+```
+
+```{r sample_function}
+  ids_needed <- findMissing(patients, ID, Age)
+  
+```
+
+
+
+## Replace missing values
+Record ID 
+```{r}
+  # record IDs 3 and 5 have missing Ages
+  # We want ID #3 to have an age of 50
+  patients[patients$ID =="03", "Age"] <- 50 
+  patients[3,]
+
+  # Also, want patient 5 to be 70
+  patients$Age[5] <- 70
+  patients[5,]
+  
+
+```
+
+## Change change values
+
+## Add variable 
+```{r}
+  patients |> 
+    mutate(new_dose = Dosage / 100)
+
+  patients
+```
+
+
+## Create github repository
+### Useful links
+* [Download GIT on desktop](https://git-scm.com/download/win)
+* [White paper on GitHub and RStudio](https://resources.github.com/whitepapers/github-and-rstudio/)
+* ["Who are you?" Error](https://stackoverflow.com/questions/11656761/git-please-tell-me-who-you-are-error)
+
+## Create environ file
+[back to instructions](#instructions)
 ## R Markdown
+In line `code` 
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
