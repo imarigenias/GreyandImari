@@ -252,6 +252,12 @@ Compare data frames with `comparedf` from `arsenal`.
 `comparedf()` is based on `PROC COMPARE` in SAS. The top output is the generic output. We can get more details by using the second code. 
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
 
+## Demo table 
+```{r}
+
+```
+
+
 ## Grey's section 
 ```{r}
       
