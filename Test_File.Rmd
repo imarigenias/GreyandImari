@@ -189,8 +189,8 @@ Makes a data frame of the ids with the missing value and the variable of interes
 
 Extract this data frame as an excel file. 
 ```{r excel-output, eval=FALSE}
-  install.packages("xlsx")
-  library("Xlsx")
+  install.packages("openxlsx")
+  library("openXlsx")
 
   write.xlsx(ids_needed, "missing_Age_IDS.xlsx",
            sheetName="ageNA", row.names = FALSE,
@@ -253,8 +253,9 @@ Compare data frames with `comparedf` from `arsenal`.
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
 
 ## Demo table 
-```{r}
-
+```{r excel-package,}
+  install.packages("openxlsx")
+  library("openxlsx")
 ```
 
 
