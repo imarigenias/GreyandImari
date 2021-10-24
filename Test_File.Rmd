@@ -82,7 +82,7 @@ The example on github uses information specific to a certain sample report, so i
 
 ### Creating an R dataset from redcap data
 ```{r create-redcap-data,}
-redcap_data = ReadRedcapReport(token = Sys.getenv("clinic_redcap_token"), url = "https://redcap.emory.edu/api/", report_id = 32116)
+redcap_data = ReadRedcapReport(token = Sys.getenv("PDFalls_redcap_token"), url = "https://redcap.emory.edu/api/", report_id = 32116)
 
 redcap_data
 
