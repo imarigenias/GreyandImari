@@ -1,20 +1,9 @@
 # packages needed
 Sys.setenv(JAVA_HOME="C:\\Program Files\\Java\\jre7")
-# install.packages("xlsx")
-library("xlsx")
+# install.packages("openxlsx")
+library("openxlsx")
 library("tidyverse")
 
-'
-# create data set
-patients <- data.frame("ID" = c("01", "02", "03", "04", "05", "06", "07",
-                                "08","09", "10"),
-                       "Age" = c(50, 18, NA, 45, NA, 20, 45, 60, 89, 90),
-                       "Dosage" = c(100, 120, 130, NA, 3000, 450, 800, 300,
-                                    NA, 500),
-                       "Dosage_Manual" = c(100, 250, 130, 150, 300, 450, 800, 
-                                           300,20,50)
-)
-'
 # create table of ids and var with missing value ----
 findMissing <- function(df, id, var){
   # df | data frame
@@ -27,17 +16,6 @@ findMissing <- function(df, id, var){
   return(ids_with_missing)  # return data frame of id and var 
 }
 
-"
-# check function
-mis <- findMissing(patients, ID, Age)
-print(mis)
-
-
-# sample new data set with added info 
-replaced_ages <- mis
-replaced_ages$Age <- c(20, 30)
-replaced_ages
-"
 
 # replace NAs with updated values ----
 populateMissing <- function(originalDF, editedDF, id, var){
@@ -53,15 +31,10 @@ populateMissing <- function(originalDF, editedDF, id, var){
 }
 # link: https://stackoverflow.com/questions/2641653/pass-a-data-frame-column-name-to-a-function 
 
-"
-# check function
-patients <- populateMissing(patients, replaced_ages, ID, Age)
-patients
-"
 
 '
 # creates excel report from data ----
-write.xlsx(mis, "missing_Age_IDS.xlsx",
+write.xlsx(patients, "missing_Age_IDS.xlsx",
            sheetName="fun", row.names = FALSE,
            col.names = TRUE, append=FALSE)
 

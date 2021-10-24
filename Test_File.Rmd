@@ -254,7 +254,8 @@ Compare data frames with `comparedf` from `arsenal`.
 
 ## Demo table 
 ```{r}
-
+  install.packages("openxlsx")
+  library("openxlsx")
 ```
 
 
