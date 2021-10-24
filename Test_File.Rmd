@@ -40,32 +40,32 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
+## Create github repository
+### Useful links
+* [Instructions from GitHub](https://guides.github.com/activities/hello-world/)
+* [Download GIT on desktop](https://git-scm.com/download/win)
+* [White paper on GitHub and RStudio](https://resources.github.com/whitepapers/github-and-rstudio/)
+* ["Who are you?" Error](https://stackoverflow.com/questions/11656761/git-please-tell-me-who-you-are-error)
 
-## Info on tidyverse package {#tidyverse}
-Here's a link to [cheat sheets](https://www.rstudio.com/resources/cheatsheets/) for the "tidyverse" package that will be useful for this analysis. Pay special attention to "dplyr" and "tidyr."
 
-# Get redcap data into R 
+# Get Redcap Data into R
 ## Lucas Instructions {#instructions}
 [Instructions](https://github.com/jlucasmckay/motionTools/blob/main/doc/02_redcap.md) from Lucas on github.
 
 ## Create environ file
 On R Studio: File > New File > New Text File. Save the file as ".Renviron." Make sure it is saved in the project directory. 
 
-
 ## Install "motionTools" package
 ```{r install-packages, eval=FALSE}
   install.packages("devtools")
   devtools::install_github("jlucasmckay/motionTools")
 ```
-You have to install the "devtools" package to obtain a function that will allow
+You have to install the `devtools` package to obtain a function that will allow
 you to download the R package (motionTools) Lucas has created for data analysis.
 
 Make sure you have [R version 4.1.1](https://cran.r-project.org/bin/macosx/). 
 Then, go to Tools > Global Options... > Code >
 check "Use native pipe operator." 
-
-## Reading a report into R
-The example on github uses information specific to a certain sample report, so it might not work for us. I'm going to use the report "Patients with Missing LEDD."
 
 ### Loading packages
 ```{r load-libraries, }
@@ -74,6 +74,12 @@ The example on github uses information specific to a certain sample report, so i
 ```
 You download R packages once, but you have to load them every time you want to use them, using `library(package-name)`. Alternatively, you can use  `package-name::function-name()` to specify the function and library you are using in your code. 
 
+### Info on tidyverse package {#tidyverse}
+Here's a link to [cheat sheets](https://www.rstudio.com/resources/cheatsheets/) for the `tidyverse` package that will be useful for this analysis. Pay special attention to `dplyr` and `tidyr`.
+
+## Reading a report into R
+The example on github uses information specific to a certain sample report, so it might not work for us. I'm going to use the report "Patients with Missing LEDD."
+
 ### Creating an R dataset from redcap data
 ```{r create-redcap-data,}
 redcap_data = ReadRedcapReport(token = Sys.getenv("clinic_redcap_token"), url = "https://redcap.emory.edu/api/", report_id = 32116)
@@ -81,7 +87,7 @@ redcap_data = ReadRedcapReport(token = Sys.getenv("clinic_redcap_token"), url = 
 redcap_data
 
 ```
-`redcap_data=ReadRedcapReport`creates a data frame called `redcap_data` using the `ReadReadcapReport` function from the `motionTools` package. I created it without manipulating the data set first, so I can show you what information it displays and how. 
+`redcap_data=ReadRedcapReport`creates a data frame called `redcap_data` using the `ReadRedcapReport` function from the `motionTools` package. I created it without manipulating the data set first, so I can show you what information it displays and how. 
 
 ### Manipulate data output 
 ```{r}
@@ -113,13 +119,13 @@ I'll create a sample data set just to practice some things we might do, such as 
 
 ## Select columns and rows
 ```{r}
-  print("Select specific column --> df_name$col_name")
+  # Select specific column --> df_name$col_name
   patients$ID
   
-  print("Select column by number --> df[, num_col]")
+  #Select column by number --> df[, num_col]
   patients[, 1]
   
-  print('Select specific row --> df[num_row, ]')
+  #Select specific row --> df[num_row, ]
   patients[1, ]
   
 ```
@@ -127,27 +133,27 @@ I'll create a sample data set just to practice some things we might do, such as 
 ## Explore data 
 ### Counts
 ```{r}
-  print("Num of patients with dosage above 100 (TRUE)")
+  # Num of patients with dosage above 100 (TRUE)
   table(patients$Dosage > 100)
   
-  print("Number of missing values (TRUE)")
+  # Number of missing values (TRUE)
   table(is.na(patients$Age))
   
 ```
 
 ## Descriptive Statistics
 ```{r}
-  print("Summary of each variable")
+  # Summary of each variable
   summary(patients)
   
-  print("Summary of certain variables")
+  # Summary of certain variables
   summary(patients$Age)
 ```
 
 
 Creating new data frames from those values 
 ```{r}
-  print("Create summary")
+  # Create summary 
   missingstats <- patients |> 
     summarise(numNA = sum(is.na(Dosage)),
               max_dose = max(Dosage, na.rm = TRUE))
@@ -158,14 +164,14 @@ Creating new data frames from those values
 
 ### Select observations based on criteria 
 ```{r}
-  print("Display IDs and ages of subjects with missing Ages")
+  #Display IDs and ages of subjects with missing Ages
   ids_ageNA<- patients |>
     filter(is.na(Age))|>  
     select(ID, Age)
 
   ids_ageNA
   
-  print("Create list of IDs")
+  # Create list of IDs
   ids_patients <- patients |>
       filter(is.na(Age))|>
       select(ID) |> 
@@ -183,27 +189,29 @@ Makes a data frame of the ids with the missing value and the variable of interes
 
 Extract this data frame as an excel file. 
 ```{r excel-output, eval=FALSE}
+  install.packages("xlsx")
+  library("Xlsx")
+
   write.xlsx(ids_needed, "missing_Age_IDS.xlsx",
            sheetName="ageNA", row.names = FALSE,
            col.names = TRUE, append=FALSE)
 ```
 Let's say we updated the table (most likely in excel). Import the excel sheet back into R and want to update the missing values with the info we found.
 
-Create updated file. 
+Create updated data frame. 
 ```{r}
   # sample new data set with added info 
-replaced_ages <- ids_needed
-replaced_ages$Age <- c(20, 30)
-replaced_ages
+  replaced_ages <- ids_needed
+  replaced_ages$Age <- c(20, 30)
+  replaced_ages
 ```
 
 Now we want to replace the missing values. In this case, I am inputting the original data frame and the updated one, and saving it to a new data frame. 
 ```{r}
   updated_patients <- populateMissing(patients, replaced_ages, ID, Age)
-  print("New data set")
+  
   updated_patients # new data set
   
-  print("Old data set")
   patients # old data set
 ```
 
@@ -243,17 +251,6 @@ Compare data frames with `comparedf` from `arsenal`.
 ```
 `comparedf()` is based on `PROC COMPARE` in SAS. The top output is the generic output. We can get more details by using the second code. 
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
-
-
-
-## Create github repository
-### Useful links
-* [Instructions from GitHub](https://guides.github.com/activities/hello-world/)
-* [Download GIT on desktop](https://git-scm.com/download/win)
-* [White paper on GitHub and RStudio](https://resources.github.com/whitepapers/github-and-rstudio/)
-* ["Who are you?" Error](https://stackoverflow.com/questions/11656761/git-please-tell-me-who-you-are-error)
-
-
 
 
 
