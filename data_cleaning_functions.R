@@ -4,17 +4,7 @@ Sys.setenv(JAVA_HOME="C:\\Program Files\\Java\\jre7")
 library("xlsx")
 library("tidyverse")
 
-# example functions 
-fooABC <- function(x) {
-  k <- x+1
-  return(k)
-}
-
-fooXYZ <- function(x) {
-  k <- fooABC(x)+1
-  return(k)
-}
-
+'
 # create data set
 patients <- data.frame("ID" = c("01", "02", "03", "04", "05", "06", "07",
                                 "08","09", "10"),
@@ -24,7 +14,7 @@ patients <- data.frame("ID" = c("01", "02", "03", "04", "05", "06", "07",
                        "Dosage_Manual" = c(100, 250, 130, 150, 300, 450, 800, 
                                            300,20,50)
 )
-
+'
 # create table of ids and var with missing value ----
 findMissing <- function(df, id, var){
   # df | data frame
@@ -84,5 +74,20 @@ write.xlsx(mis, paste(name, ".xlsx", sep=""),
 
 # another way to replace values based on matched ids 
 #patients$Age[match(replaced_ages$ID, patients$ID)] <- replaced_ages$Age
-
 # link: https://stackoverflow.com/questions/40177132/replace-values-from-another-dataframe-by-ids 
+
+# create data frame of observations with different variable values 
+findDiff <- function(df, id, var1, var2){
+    # change variable input to string 
+    id_str <- deparse(substitute(id))
+    var1_str <- deparse(substitute(var1))
+    var2_str <- deparse(substitute(var2))
+  
+    # select observations with different variable values 
+    diffDF <- df[!df[,var1_str] %in% df[,var2_str], ] |> 
+      select({{id}}, {{var1}}, {{var2}})  # only extract the relevant variables
+    
+    return(diffDF)
+}
+'# show values in Dosage that are different than Dosage Manual 
+  patients$Dosage[!patients$Dosage %in% patients$Dosage_Manual]'

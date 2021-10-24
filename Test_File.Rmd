@@ -21,8 +21,27 @@ This is a [link](https://www.middleprofessor.com/files/applied-biostatistics_boo
 * 2.11.1  Create a “fake-data” chunk
 * 2.11.3 Knit the Rmd
 
+## R Markdown info
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-### Info on tidyverse package {#tidyverse}
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+## Info on tidyverse package {#tidyverse}
 Here's a link to [cheat sheets](https://www.rstudio.com/resources/cheatsheets/) for the "tidyverse" package that will be useful for this analysis. Pay special attention to "dplyr" and "tidyr."
 
 # Get redcap data into R 
@@ -73,10 +92,11 @@ redcap_data
   rd_data1
 ```
 The next lines I have added after creating the data set specify how to arrange the data and which columns I want in the output. These functions come from the `dplyr` package mentioned [earlier](#tidyverse), which is used in data manipulation. 
-Also read up  on [piping](https://r4ds.had.co.nz/pipes.html). (The pipe operator looks like " |> " and not "%>%" now).
+Also read up  on [piping](https://r4ds.had.co.nz/pipes.html). (The pipe operator looks like `|>` and not `%>%` now).
 
 # Edit data in R
 There are many things we can do from here. I didn't edit any of the data sets, because I am not sure how that will affect things on Redcap. Lucas will show us what he wants us to do and how. 
+
 
 I'll create a sample data set just to practice some things we might do, such as replacing missing data or changing values.
 ```{r}
@@ -95,6 +115,9 @@ I'll create a sample data set just to practice some things we might do, such as 
 ```{r}
   print("Select specific column --> df_name$col_name")
   patients$ID
+  
+  print("Select column by number --> df[, num_col]")
+  patients[, 1]
   
   print('Select specific row --> df[num_row, ]')
   patients[1, ]
@@ -156,8 +179,9 @@ Creating new data frames from those values
   ids_needed <- findMissing(patients, ID, Age)
   ids_needed
 ```
+Makes a data frame of the ids with the missing value and the variable of interest we are looking at. The idea is that we would fill the missing values in an excel file and then feed it back into R. 
 
-Extract this table as an excel file. 
+Extract this data frame as an excel file. 
 ```{r excel-output, eval=FALSE}
   write.xlsx(ids_needed, "missing_Age_IDS.xlsx",
            sheetName="ageNA", row.names = FALSE,
@@ -184,44 +208,52 @@ Now we want to replace the missing values. In this case, I am inputting the orig
 ```
 
 
-## Change values
-
 ## Add variable 
 ```{r}
-  patients |> 
-    mutate(new_dose = Dosage / 100)
+  patients <- patients |> 
+      mutate(new_dose = Dosage / 100)
 
   patients
 ```
+You can make multiple new variables at once. 
+
+## Different values 
+Create data frame of observations with different variable values
+```{r}
+    diffDosage <- findDiff(patients, ID, Dosage, Dosage_Manual)
+    diffDosage
+  
+```
+
+## Arsenal 
+He also mentioned an R package named `aresnal`. I'm going to download it here. I am not sure what it does.
+```{r arsenal,}
+    # install.packages("arsenal")
+    library("arsenal")
+```
+
+
+Compare data frames with `comparedf` from `arsenal`.
+```{r explore-arsenal,}
+   comparedf(patients, updated_patients) 
+
+
+  summary(comparedf(patients, updated_patients, by="ID"))
+
+```
+`comparedf()` is based on `PROC COMPARE` in SAS. The top output is the generic output. We can get more details by using the second code. 
+[More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
+
 
 
 ## Create github repository
 ### Useful links
+* [Instructions from GitHub](https://guides.github.com/activities/hello-world/)
 * [Download GIT on desktop](https://git-scm.com/download/win)
 * [White paper on GitHub and RStudio](https://resources.github.com/whitepapers/github-and-rstudio/)
 * ["Who are you?" Error](https://stackoverflow.com/questions/11656761/git-please-tell-me-who-you-are-error)
 
 
 
-## R Markdown
-In line `code` 
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 
