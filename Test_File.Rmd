@@ -234,7 +234,7 @@ Create data frame of observations with different variable values
 ```
 
 ## Arsenal 
-He also mentioned an R package named `aresnal`. I'm going to download it here. I am not sure what it does.
+He also mentioned an R package named `arsenal`. I'm going to download it here. I am not sure what it does.
 ```{r arsenal,}
     # install.packages("arsenal")
     library("arsenal")
@@ -252,5 +252,9 @@ Compare data frames with `comparedf` from `arsenal`.
 `comparedf()` is based on `PROC COMPARE` in SAS. The top output is the generic output. We can get more details by using the second code. 
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
 
+## Grey's section 
+```{r}
+      
+```
 
 
