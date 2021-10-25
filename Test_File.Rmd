@@ -252,7 +252,7 @@ Compare data frames with `comparedf` from `arsenal`.
 `comparedf()` is based on `PROC COMPARE` in SAS. The top output is the generic output. We can get more details by using the second code. 
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
 
-## Demo table 
+# Demo table 
 ```{r excel-package, eval=FALSE}
   install.packages("openxlsx")
   library("openxlsx")
@@ -280,8 +280,23 @@ Link variables back to their labels
 ```
 
 
-Re-factor certain variables. Doesn't work with creating variable labels. 
-```{r select-binary-variables,}
+
+
+
+Actual table.
+```{r demo-table, results='asis'}
+  # correct label for Gender
+  genderf <- factor(sData$gender)
+  levels(genderf) <- c("Male", "Female")
+  mylabels <- list(genderf = "Gender")
+
+  summary(tableby(~ genderf + age_enrollment , data=sData), title="Demographics", labelTranslations = mylabels)
+
+```
+
+
+Ignore this. I tried to re-factor certain variables so they could be analyzed as binary variables. It works, but then I can't add the variable label to it as well.  
+```{r select-binary-variables, eval=FALSE}
     sdFactors <- sData # make copy of data set 
     
     # select possible binary variables 
@@ -299,23 +314,7 @@ Re-factor certain variables. Doesn't work with creating variable labels.
     
 ```
 
-
-
-
-
-```{r demo-table,}
-  # correct label for Gender
-  genderf <- factor(sData$gender)
-  levels(genderf) <- c("Male", "Female")
-  mylabels <- list(genderf = "Gender")
-
-  summary(tableby(~ genderf + age_enrollment , data=sData), title="Demographics", labelTranslations = mylabels)
-
-```
-
-
-
-## Grey's section 
+# Grey's section 
 ```{r}
       
 ```
