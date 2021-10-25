@@ -308,26 +308,9 @@ Re-factor certain variables. Doesn't work with creating variable labels.
   genderf <- factor(sData$gender)
   levels(genderf) <- c("Male", "Female")
   mylabels <- list(genderf = "Gender")
-  
-<<<<<<< HEAD
 
   summary(tableby(~ genderf + age_enrollment , data=sData), title="Demographics", labelTranslations = mylabels)
-=======
-  summary(tableby(~ genderf + age_enrollment , data=sdLabels), title="Demographics")
-  summary(tableby(~ as.factor(gender) + age_enrollment , data=sdLabels), title="Demographics")
-  
-  summary(tableby(~ gender + age_enrollment , data=sdFactors), title="Demographics")
 
-
-```
-
-
-
-
-
-```{r}
-    summary(tableby(~gender + age_enrollment , data=sdFactors), title="Demographics")
->>>>>>> 0c4ef1bbf07f834aa016bdf05feb88464e602d79
 ```
 
 
