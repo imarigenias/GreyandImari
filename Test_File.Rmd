@@ -253,10 +253,66 @@ Compare data frames with `comparedf` from `arsenal`.
 [More on aresnal.](https://cran.r-project.org/web/packages/arsenal/index.html)
 
 ## Demo table 
-```{r excel-package,}
+```{r excel-package, eval=FALSE}
   install.packages("openxlsx")
   library("openxlsx")
 ```
+
+Upload Shantha's excel file to R as a data frame.
+```{r input-Shanta-data,}
+    # start at second row because top row is variable label 
+    sData <- read.xlsx("Combined_Lab_Data.xlsx", startRow = 2)
+    dim(sData) 
+```
+
+I created a data frame that stores the variable labels and variable names from Shantha's data. 
+```{r label-variable-names,}
+    
+    labelVariableSD <- t(read.xlsx("Combined_Lab_Data.xlsx", colNames = FALSE)[1:2,])
+    colnames(labelVariableSD) <- c("Label", "Variable Name")
+    head(labelVariableSD)
+    # LEDD is saved as "Shantha-made column" for some reason
+```
+
+Link variables back to their labels
+```{r add-labels}
+  labels(sData) <- as.vector(labelVariableSD[,1])
+```
+
+
+Re-factor certain variables. Doesn't work with creating variable labels. 
+```{r select-binary-variables,}
+    sdFactors <- sData # make copy of data set 
+    
+    # select possible binary variables 
+    possBinaryVar <- sdFactors |> select_if(~all(. <2, na.rm = TRUE))
+    
+    # remove variables that might not be binary
+    subsetBV <- possBinaryVar |> select(-c("moca_orientation_1":"moca_orientation_6", "moca_lt_12y_edu", "rasag_maob_daily", "mds_updrs_iii_16a_video","mds_updrs_iii_17e_video","moca_serial_7s_1":"moca_serial_7s_3"))
+    
+    # create vector of columns names of binary variables  
+    binaryVars <- colnames(subsetBV)
+    
+    # update those variables to be recoded as Factors
+    sdFactors[,binaryVars] <- apply(sdFactors[, binaryVars], 2,
+                                     function(x)as.factor(x))
+    
+```
+
+
+
+
+
+```{r demo-table,}
+  # correct label for Gender
+  genderf <- factor(sData$gender)
+  levels(genderf) <- c("Male", "Female")
+  mylabels <- list(genderf = "Gender")
+  
+
+  summary(tableby(~ genderf + age_enrollment , data=sData), title="Demographics", labelTranslations = mylabels)
+```
+
 
 
 ## Grey's section 
