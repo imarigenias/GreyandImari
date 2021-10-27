@@ -3,8 +3,15 @@ library(tidyverse)
 redcap_data <- ReadRedcapReport(token = Sys.getenv("movementDisorders_redcap_token"), 
                                url = "https://redcap.emory.edu/api/", report_id = 32159)
 
+
 library("openxlsx")
+
+#load Svetlana's DBS excel
 svetData <- read.xlsx("DBS_pts_10-21-21_GRS.xlsx")
+
+#load sample Redcap report of DBS instrument; to be replaced with 
+#Redcap report load in future
+redcapDBSReport <- read.xlsx("sampleDBSReport.xlsx")
 
 #next steps:
 #1) do "deep plyer left join" to populate the mostly blank "redcap_data" df 
