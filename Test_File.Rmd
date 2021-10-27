@@ -295,7 +295,7 @@ Actual table.
   mylabels <- list(genderf = "Gender")
 
   summary(tableby(~ genderf + age_enrollment , data=sData), title="Demographics", labelTranslations = mylabels)
-
+  
 ```
 
 
