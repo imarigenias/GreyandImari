@@ -2,7 +2,11 @@
 title: "Test_File"
 author: "Imari Genias"
 date: "10/22/2021"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -271,7 +275,7 @@ I created a data frame that stores the variable labels and variable names from S
     labelVariableSD <- t(read.xlsx("Combined_Lab_Data.xlsx", colNames = FALSE)[1:2,])
     colnames(labelVariableSD) <- c("Label", "Variable Name")
     head(labelVariableSD)
-    # LEDD is saved as "Shantha-made column" for some reason
+    # LEDD is saved as "Shantha-made column" for some reason <- thats because the the variable name for the variable lable "LEDD" is  "Shantha-made column"
 ```
 
 Link variables back to their labels
@@ -314,9 +318,28 @@ Ignore this. I tried to re-factor certain variables so they could be analyzed as
     
 ```
 
-# Grey's section 
-```{r}
+# Grey's section
+
+## Excel into R
+This block is a copy of Imari's. Goal to familiarize myself with loading xlsx a R dataframe
+```{r load_shanthas_data_variable_label_match_copy}
+  library("openxlsx")
+  # start at second row because top row is variable label 
+  sData <- read.xlsx("Combined_Lab_Data.xlsx", startRow = 2) #sdata is dataframe copy of Shantha's excel
+  dim(sData) 
+  labelVariableSD <- t(read.xlsx("Combined_Lab_Data.xlsx", colNames = FALSE)[1:2,]) #labelVariableSD is 2 column matrix associating Shanth's column labels (row one in her excel) to the variable label (row 2)
+  colnames(labelVariableSD) <- c("Label", "Variable Name")
+  head(labelVariableSD)
       
 ```
+
+## Redcap to R using "redcapAPI"
+Goal: Load PDFalls Data Dictionary into R. Compare PDFalls variable names to excel variable names
+Might be useful to use the package "redcapAPI" https://cran.r-project.org/web/packages/redcapAPI/redcapAPI.pdf
+```{r load_redcap_dataDict}
+
+```
+
+
 
 
