@@ -306,6 +306,16 @@ the Orthotrack variables by sex.
     ## |&nbsp;&nbsp;&nbsp;Mean (SD) |  12.644 (4.664)  |  13.420 (4.086)  |  12.950 (4.457)  |        |
     ## |&nbsp;&nbsp;&nbsp;Range     |  4.000 - 50.000  |  5.000 - 30.000  |  4.000 - 50.000  |        |
 
+# Save data
+
+In this step, we are going to save the file as an Rdata file, so we can
+use it in R shiny.
+
+``` r
+  data.save <- file.path("./Esper_Orthotrack/data")
+  saveRDS(oD4, file = file.path(data.save, "ortho_data.rds"))
+```
+
 # Ignore
 
 If for some reason we wanted to extract the values for the Orthotrack
