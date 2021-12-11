@@ -10,31 +10,53 @@
 # select libraries----
 library(shiny)
 library(tidyverse)
+library(plotly)
 library(scales)
 library(motionTools)
 library(readxl)
 library(DT)
 library(kableExtra)
 library(bslib)
-thematic::thematic_shiny(font = "auto")
 
-# set up theme
+# set up theme----
+# choose theme, primary color, and font
 my_theme <- bs_theme(version = 4, 
                      bootswatch = "simplex",
                      primary = "#007dba", 
                      base_font = font_google("Tinos"))
+# set graph theme 
+thematic::thematic_shiny(font = "auto")
 # import data----
+raw_data <- ReadRedcapReport(token = Sys.getenv("movementDisorders_redcap_token"), 
+                             url = "https://redcap.emory.edu/api/", report_id = 31113)
+# clean up redcap import----
+ortho_data <- raw_data |> 
+  # fill in missing data among patients
+  group_by(record_id) |> fill(names(raw_data)[-1], .direction = "updown") |> 
+  # choose only the unique observations
+  distinct(record_id, .keep_all = T) |> 
+  # choose which variables are needed
+  select(-c(redcap_repeat_instrument, redcap_repeat_instance, patient_fullpath_neurology, patient_folder_neurology, nrm_file, report_final_impression)) 
+
+# change sex to factor variable
+ortho_data$sex <- factor(ortho_data$sex, levels=c(0,1), labels=c("Male", "Female")) 
+
+# import descriptor files 
 data.src <- file.path("../Esper_Orthotrack/data")
-ortho_data <- readRDS(file= file.path(data.src,"ortho_data.Rds"))
 ortho_label <- read_excel(path=file.path(data.src, "ortho_labels.xlsx"), sheet = 1) # labels for variables
 diag_label <- read_excel(path=file.path(data.src, "ortho_labels.xlsx"), sheet = 2)  # categories for diagnosis
 
 
 # ui----
 ui <- fluidPage(
+  # change output display----
+  # theme from bs_lib bootswatch 
   theme = my_theme,
-  titlePanel( title = h1(strong("Orthotrack Data Analysis"), align = "center")),
+  
+ 
   # ORTHO section----
+  titlePanel( title = h1(strong("Orthotrack Data Analysis"), align = "center")),
+  
   # demographic info 
   h2(strong("Demographic Information")),
   wellPanel(
@@ -67,106 +89,114 @@ ui <- fluidPage(
   # user input on orthotrack metrics
   sidebarLayout(
     sidebarPanel(
+     
       # step length
       fluidRow(
-        column(6,
+        
+        column(5,
                numericInput("step_leng_ave_rt", "Step Length Average - Right", value = 48)),
-        column(6,
+        column(5,
                numericInput("step_leng_ave_lft", "Step Length Average - Left", value = 48),
                )
       ),
       # stride length
       fluidRow(
-        column(6,
+        column(5,
                numericInput("strid_leng_ave_rt", "Stride Length Average - Right", value = 96)),
-        column(6,
+        column(5,
                numericInput("strid_leng_ave_lft", "Stride Length Average - Left", value = 96)),
       ),
       # forward velocity 
       fluidRow(
-        column(6,
+        column(5,
                numericInput("for_vel_rt", "Forward Velocity Average - Right", value = 86)),
-        column(6,
+        column(5,
                numericInput("for_vel_lft", "Forwards Velocity Average - Left", value = 86)),
       ),
       # cadence
       fluidRow(
-        column(6,
+        column(5,
                numericInput("cad_ave_rt", "Cadence Average - Right", value = 108)),
-        column(6,
+        column(5,
                numericInput("cad_ave_lft", "Cadence Average - Left", value = 108)),
       ),
       # Total Support time
       fluidRow(
-        column(6,
+        column(5,
                numericInput("tot_sup_time_rt", "Total Support Time - Right", value = 64)),
-        column(6,
+        column(5,
                numericInput("tot_sup_time_lft", "Total Support Time - Left", value = 64))
         ),
       # Swing phase 
       fluidRow(
-        column(6,
+        column(5,
                numericInput("swing_phas_rt", "Swing Phase  Average - Right", value = 35)),
-        column(6,
+        column(5,
                numericInput("swing_phas_lft", "Swing Phase  Average - Left", value = 35))
         ),
       # Initial Double Support time
       fluidRow(
-        column(6,
+        column(5,
                numericInput("int_2x_sup_time_rt", "Initial Double Support Time  - Right", value = 14)),
         column(5, 
                numericInput("int_2x_sup_time_lft", "Initial Double Support Time  - Left", value = 14))
         ),
       # Single Support Time
       fluidRow(
-        column(6,
+        column(5,
                numericInput("single_sup_time_rt", "Single Support Time - Right", value = 36)),
-        column(6,
+        column(5,
                numericInput("single_sup_time_lft", "Single Support Time - Left", value = 36))
         ),
       # Step Width
       numericInput("step_width", "Step Width", value = 12),
       # Number of Steps
       fluidRow(
-        column(6,
+        column(5,
                numericInput("num_steps_rt", "Number of Steps - Right", value = 14)),
-        column(6, 
+        column(5, 
                numericInput("num_steps_lft", "Number of Steps - Left", value = 14))
         ),
       # Number of Strides
       fluidRow(
-        column(6, 
+        column(5, 
                numericInput("num_strides_rt", "Number of Strides - Right", value = 13)),
-        column(6,
+        column(5,
                numericInput("num_strides_lft", "Number of Strides - Left", value = 13))
         ),
+      width = 3
     ),
     # display results---- 
     mainPanel(
       tabsetPanel(type = "tabs",
-                  tabPanel("Overall", htmlOutput("total_info"), tableOutput("total_stat")),
-                  tabPanel("By Gender", htmlOutput("gender_info"), tableOutput("gender_stat")), # sample with incorrect table
-                  tabPanel("By Age", htmlOutput("age_info"), tableOutput("age_stat")), # incorrect output but works
-                  tabPanel("By Diagnosis", htmlOutput("diag_info"), tableOutput("diag_stat")), 
-                  tabPanel("Combined Filters", htmlOutput("filter_info"), tableOutput("filter_stat")), 
+                  tabPanel("Overall", htmlOutput("td_overall"), tableOutput("total_stat")),
+                  tabPanel("By Gender", htmlOutput("td_gender"), tableOutput("gender_stat")), # sample with incorrect table
+                  tabPanel("By Age", htmlOutput("td_age"), tableOutput("age_stat")), # incorrect output but works
+                  tabPanel("By Diagnosis", htmlOutput("td_diag"), tableOutput("diag_stat")), 
+                  tabPanel("Combined Filters", htmlOutput("td_combined"), tableOutput("combined_stat")), 
                   tabPanel("Plots", 
-                           h5("Overall", align = "center"),
-                           plotOutput("plot_overall"), 
+                           h4("Overall", align = "center"),
+                           htmlOutput("pd_overall"),
+                           plotlyOutput("plot_overall"), 
                            fluidRow(
                                     column(6,
-                                           h6("Gender", align = "center"),
-                                           plotOutput("plot_gender")),
+                                           h5("Gender", align = "center"),
+                                           h6(htmlOutput("pd_gender"), align = "center"),
+                                           plotlyOutput("plot_gender")),
                                     column(6,
                                            h6("Age", align = "center"),
-                                           plotOutput("plot_age")
+                                           h6(htmlOutput("pd_age"), align = "center"),
+                                           plotlyOutput("plot_age")
                            )),
                            fluidRow(
                              column(6,
-                                    h6("Diagnosis", align = "center"),
-                                    plotOutput("plot_diag")),
+                                    h5("Diagnosis", align = "center"),
+                                    h6(htmlOutput("pd_diag"), align = "center"),
+                                    plotlyOutput("plot_diag")),
                              column(6,
-                                    h6("Combined", align = "center"),
-                                    plotOutput("plot_combined")) 
+                                    h5("Combined", align = "center"),
+                                    h6(htmlOutput("pd_combined"), align = "center"),
+                                    plotlyOutput("plot_combined")) 
                              )
                            ),
                   )
@@ -175,6 +205,7 @@ ui <- fluidPage(
   # break
   br(),
   br(),
+  
   
   # IGNORE (practice)----
   fluidRow(
@@ -211,6 +242,9 @@ ui <- fluidPage(
 
 # server----
 server <- function(input, output, session) {
+
+  
+ 
   # reactive values from user input----
   # characteristics 
   sex <- reactive(input$sex)
@@ -305,7 +339,7 @@ server <- function(input, output, session) {
 
  
   # create summary table of all ortho track variables----
-  gen_sum <- function(ortho_data_set){
+  sumTable <- function(ortho_data_set){
     # un-group data and select ortho track variables
     ortho_stats <- ortho_data_set |> ungroup() |> select(c(step_leng_ave_rt:num_strides_lft)) |> 
       # convert data frame from wide to long; group by key = variable
@@ -330,7 +364,7 @@ server <- function(input, output, session) {
   })
   
   # function to generate data frame with percentiles
-  gen_pctls <- function(ortho_data_set, user_ortho_values){
+  pctlTable <- function(ortho_data_set, user_ortho_values){
     # user_input to summary stats data frame for that data set 
     pctl_df <- bind_cols(ortho_data_set, user_ortho_values) |> 
       # adds percentile column
@@ -345,31 +379,31 @@ server <- function(input, output, session) {
   # Create percentile summary data set for each subset of data----
   # total subjects
   overall_pctls <- reactive({
-    over_all_pct <- gen_pctls(gen_sum(ortho_data), user_value_df())
+    over_all_pct <- pctlTable(sumTable(ortho_data), user_value_df())
     return(over_all_pct)
   })
   
   # percentile data frame based on gender input 
   gender_pctls <- reactive({
     gender_subset <- dplyr::filter(ortho_data, sex == sex())
-    gender_sum <- gen_sum(gender_subset)
-    gender_pctls <- gen_pctls(gender_sum, user_value_df())
+    gender_sum <- sumTable(gender_subset)
+    gender_pctls <- pctlTable(gender_sum, user_value_df())
     return(gender_pctls)
   })
   
   # percentile data frame based on age input 
   age_pctls <- reactive({
     age_subset <- dplyr::filter(ortho_data, between(age_capture, age()-5, age()+5))
-    age_sum <- gen_sum(age_subset)
-    age_pctls <- gen_pctls(age_sum, user_value_df())
+    age_sum <- sumTable(age_subset)
+    age_pctls <- pctlTable(age_sum, user_value_df())
     return(age_pctls)
   })
   
   # percentile data frame based on diagnosis input  
   diag_pctls <- reactive({
     diag_subset <- dplyr::filter(ortho_data, dw_icd == diag())
-    diag_sum <- gen_sum(diag_subset)
-    diag_pctls <- gen_pctls(diag_sum, user_value_df())
+    diag_sum <- sumTable(diag_subset)
+    diag_pctls <- pctlTable(diag_sum, user_value_df())
     return(diag_pctls)
   })
   
@@ -378,61 +412,88 @@ server <- function(input, output, session) {
     filter_subset <- ortho_data |> filter(sex == sex() & 
                                             between(age_capture, age()-5, age()+5) &
                                             dw_icd == diag())
-    combined_sum <- gen_sum(filter_subset)
-    combined_pctls <- gen_pctls(combined_sum, user_value_df())
+    combined_sum <- sumTable(filter_subset)
+    combined_pctls <- pctlTable(combined_sum, user_value_df())
     return(combined_pctls)
   })
   
+  # generate informative descriptions for data output----
+  # overall 
+  overall_info <- reactive({
+    paste0("<b>Number of observations: </b>", nrow(ortho_data))
+  })
+  # gender
+  gender_info <- reactive({
+    paste0("<b>Gender:  </b>", sex(), "  <b>Number of Observations: </b>", nrow(ortho_sex()))
+  })
+  # age
+  age_info <- reactive({
+    paste0("<b>Age range:  </b>(", age()-5, ", ", age()+5, ")", "  <b>Number of Observations: </b>", nrow(ortho_age()))
+  })
+  
+  # diagnosis
+  diag_info <- reactive({
+    paste0("<b>Diagnosis:  </b>", diag_desc(), "  <b>Number of Observations: </b>", nrow(ortho_diag()))
+  })
+  
+  # combined
+  combined_info <- reactive({
+    paste0("<b>Gender:  </b>", sex(), "    <b>Age range:  </b>(", age()-5, ", ", age()+5, ")", "    <b>Diagnosis:  </b>", diag_desc(), "    <b>Number of Observations: </b>", nrow(ortho_filtered()))
+  })
+  
+ 
   
   # display summary data per dataset----
-  #total subjects 
+  # overall subjects 
   output$total_stat <- renderTable({
     overall_pctls()
   })
   # info on overall data
-  output$total_info <- renderText({
-    paste0("<b>Number of observations: </b>", nrow(ortho_data))
-  })
+  output$td_overall <- renderText({
+    overall_info()
+  })  
   
   # table from filtered data set
+  
   # by gender
   output$gender_stat <- renderTable({
     gender_pctls()
   })
-  # distribution info for gender 
-  output$gender_info <- renderText({
-    paste0("<b>Gender:  </b>", sex(), "  <b>Number of Observations: </b>", nrow(ortho_sex()))
-  })
+  
+  # info on gender table
+  output$td_gender <- renderText({
+    gender_info()
+  })  
   
   # by age
   output$age_stat <- renderTable({
     age_pctls()
   })
-  # distribution info for gender 
-  output$age_info <- renderText({
-    paste0("<b>Age range:  </b>(", age()-5, ", ", age()+5, ")", "  <b>Number of Observations: </b>", nrow(ortho_age()))
-  })
+  # distribution info for age
+  output$td_age <- renderText({
+    age_info()
+  })  
   
   # by diagnosis
   output$diag_stat <- renderTable({
     diag_pctls()
   })
   # distribution info for diagnosis
-  output$diag_info <- renderText({
-    paste0("<b>Diagnosis:  </b>", diag_desc(), "  <b>Number of Observations: </b>", nrow(ortho_diag()))
-  })
+  output$td_diag <- renderText({
+    diag_info()
+  })  
   
   # filtered with all values
-  output$filter_stat <- renderTable({
+  output$combined_stat <- renderTable({
     combined_pctls()
   })
+  # informative on filtered table
+  output$td_combined <- renderText({
+    combined_info()
+  })  
   
-  output$filter_info <- renderText({
-    paste0("<b>Gender:  </b>", sex(), "    <b>Age range:  </b>(", age()-5, ", ", age()+5, ")", "    <b>Diagnosis:  </b>", diag_desc(), "    <b>Number of Observations: </b>", nrow(ortho_filtered()))
-  })
-  
+
   # value/average plot----
-  # generate data set to be plotted
   gen_mean_plot <- function(ortho_data_set, user_input){
     # generate average of each metric 
     ortho_mean <- ortho_data_set |> ungroup() |> 
@@ -465,21 +526,24 @@ server <- function(input, output, session) {
     
     # find user_value/mean
     ortho_mean$mean_multiple <- round(ortho_mean$user_input/ortho_mean$mean, 2)
+    # scale the values (< 1 = neg, > 1 = pos. to show direction of change )
+    ortho_mean$mm_scaled <- ifelse(ortho_mean$mean_multiple < 1, ortho_mean$mean_multiple * -1, ortho_mean$mean_multiple)
+    
     # set factor to keep order
     ortho_mean$prefix <- factor(ortho_mean$prefix, levels = rev(unique(ortho_mean$prefix)), ordered = T)
     ortho_mean$side <- factor(ortho_mean$side, levels = c("left", "right"))
     
     # generate bar plot
-    plot <- ggplot(ortho_mean, aes(prefix, mean_multiple, fill = side)) + 
+    plot_basic <- ggplot(ortho_mean, aes(prefix, mm_scaled, fill = side, text = paste('Side: ', str_to_title(side), '<br>Metric: ', prefix, '<br>Average: ', round(mean, 2), '<br>Patient value: ', user_input,  '<br>Value/Average: ', percent(mean_multiple)))) + 
       geom_bar(position = "dodge", stat = "identity") + coord_flip() + 
-      guides(fill = guide_legend(reverse = F)) + xlab("Metric") + ylab("Value/Average") +
+      guides(fill = guide_legend(reverse = F)) + xlab("") + ylab("Percent") +
       scale_fill_manual("legend", values = c("right" = "#1578cf", "left" = "#77c2fe"),na.value = "#484c44") +
       scale_y_continuous(labels = scales::percent_format(scale = 100))
-      
+    plot <- ggplotly(plot_basic, tooltip = c("text"))
+ 
     return(plot)
-    
-    # 484c44
   }
+  
   
   # generate plots----
   # create plot from overall data
@@ -488,50 +552,70 @@ server <- function(input, output, session) {
     return(display_plot)
   })
   # display overall plot
-  output$plot_overall <- renderPlot({
+  output$plot_overall <- renderPlotly({
     overall_plot()
   })
+  # information on plot
+  output$pd_overall <- renderText({
+    overall_info()
+  })  
   
 
   # create plot from gender data
   gender_plot <- reactive({
-    display_plot <- gen_mean_plot(ortho_sex(), user_value_df())
+    display_plot <- gen_mean_plot(ortho_sex(), user_value_df())  |> hide_legend()
     return(display_plot)
   })
   # display plot from gender data
-  output$plot_gender <- renderPlot({
-    gender_plot()
+  output$plot_gender <- renderPlotly({
+    gender_plot() 
   })
+  # information on plot
+  output$pd_gender <- renderText({
+    gender_info()
+  })  
   
   # create plot from age data
   age_plot <- reactive({
-    display_plot <- gen_mean_plot(ortho_age(), user_value_df())
+    display_plot <- gen_mean_plot(ortho_age(), user_value_df()) |> hide_legend()
     return(display_plot)
   })
   # display plot from age data
-  output$plot_age <- renderPlot({
-    age_plot()
+  output$plot_age <- renderPlotly({
+    age_plot() 
   })
+  # information on plot
+  output$pd_age <- renderText({
+    age_info()
+  })  
   
   # create plot from diagnosis data
   diag_plot <- reactive({
-    display_plot <- gen_mean_plot(ortho_diag(), user_value_df())
+    display_plot <- gen_mean_plot(ortho_diag(), user_value_df()) |> hide_legend()
     return(display_plot)
   })
   # display plot from diagnosis data
-  output$plot_diag <- renderPlot({
+  output$plot_diag <- renderPlotly({
     diag_plot()
   })
+  # information on plot
+  output$pd_diag <- renderText({
+    diag_info()
+  })  
   
   # create plot from combined data
   combined_plot <- reactive({
-    display_plot <- gen_mean_plot(ortho_filtered(), user_value_df())
+    display_plot <- gen_mean_plot(ortho_filtered(), user_value_df()) |> hide_legend()
     return(display_plot)
   })
   # display plot from combined data
-  output$plot_combined <- renderPlot({
+  output$plot_combined <- renderPlotly({
     diag_plot()
   })
+  # information on plot
+  output$pd_combined <- renderText({
+    combined_info()
+  })  
   
   # trying things----
   message <- eventReactive(input$submit, {
